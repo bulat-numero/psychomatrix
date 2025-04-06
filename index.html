@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Психоматрица</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f7efe3, #fcead7);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .sphere {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(40px);
+      opacity: 0.7;
+      z-index: 0;
+    }
+
+    .sphere1 {
+      top: 10%;
+      left: 10%;
+      width: 180px;
+      height: 180px;
+      background: radial-gradient(circle at center, #ffd194, #ff9466);
+    }
+
+    .sphere2 {
+      bottom: 10%;
+      right: 15%;
+      width: 220px;
+      height: 220px;
+      background: radial-gradient(circle at center, #fff3b0, #ffcc70);
+    }
+
+    .glass-card {
+      position: relative;
+      width: 90vw;
+      max-width: 476px;
+      
+      margin: 60px auto;
+      padding: 2vw;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      backdrop-filter: blur(15px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      z-index: 1;
+    }
+
+    h2 {
+      text-transform: uppercase;
+      font-size: clamp(18px, 4vw, 24px);
+      margin-bottom: 5px;
+      color: #333;
+    }
+
+    p.description {
+      text-transform: lowercase;
+      font-size: 14px;
+      margin-top: 2px;
+      margin-bottom: 20px;
+      color: #555;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      max-width: 150px;
+      padding: 10px;
+      border: none;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.4);
+      font-size: 14px;
+      margin: 0 auto 15px auto;
+      display: block;
+      outline: none;
+      text-align: center;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 50px;
+      background: linear-gradient(to right, #ff9966, #ff5e62);
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(255, 94, 98, 0.4);
+    }
+
+    #matrix {
+      margin-top: 30px;
+      display: grid;
+      width: 100%;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .cell {
+      background: rgba(255,255,255,0.6);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px;
+      min-height: 80px;
+    }
+
+    .cell .label {
+      font-weight: normal;
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+
+    .cell span {
+      font-weight: normal;
+      color: #222;
+      font-size: 16px;
+      margin: auto 0;
+    }
+
+    .wide {
+      grid-column: span 2;
+    }
+
+    #life {
+      grid-column-start: 2;
+      grid-column-end: 3;
+    }
+
+    @media (max-width: 768px) {
+  .glass-card {
+    margin-top: 30px;
+  }
+      #fate .label {
+        font-size: 0;
+        position: relative;
+      }
+      #fate .label::after {
+        content: "ЧС";
+        font-size: 14px;
+      }
+
+      #temperament .label {
+        font-size: 0;
+        position: relative;
+      }
+      #temperament .label::after {
+        content: "Темпер.";
+        font-size: 14px;
+      }
+
+      #energy .label {
+        font-size: 0;
+        position: relative;
+      }
+      #energy .label::after {
+        content: "Энергия";
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="sphere sphere1"></div>
+  <div class="sphere sphere2"></div>
+  <div class="glass-card">
+    <h2>Расчет психоматрицы</h2>
+    <p class="description">введите свою дату рождения</p>
+    <input type="text" id="birthdate" placeholder="ДД.ММ.ГГГГ">
+    <p id="error-message" style="color: red; font-size: 12px; display: none; margin: 5px 0 0;">введите корректную дату</p>
+    <button onclick="calculateMatrix()">Рассчитать</button>
+    <div id="matrix">
+      <div class="cell wide" id="extra-numbers"><div class="label">Доп. числа</div> <span></span></div>
+      <div class="cell" id="fate"><div class="label">Число судьбы</div><span></span></div>
+      <div class="cell" id="temperament"><div class="label">Темперамент</div><span></span></div>
+      <div class="cell" id="character"><div class="label">Характер</div><span></span></div>
+      <div class="cell" id="health"><div class="label">Здоровье</div><span></span></div>
+      <div class="cell" id="luck"><div class="label">Удача</div><span></span></div>
+      <div class="cell" id="goal">
+        <div class="label" title="Скрытая цель рассчитывается из Характера, Здоровья и Удачи после трансформаций">Цель</div>
+        <span></span></div>
+      <div class="cell" id="energy"><div class="label">Энергия (время)</div><span></span></div>
+      <div class="cell" id="logic"><div class="label">Логика</div><span></span></div>
+      <div class="cell" id="duty"><div class="label">Долг</div><span></span></div>
+      <div class="cell" id="family"><div class="label">Семья</div><span></span></div>
+      <div class="cell" id="interest"><div class="label">Интерес</div><span></span></div>
+      <div class="cell" id="work"><div class="label">Труд</div><span></span></div>
+      <div class="cell" id="memory"><div class="label">Память</div><span></span></div>
+      <div class="cell" id="habits"><div class="label">Привычки</div><span></span></div>
+      <div class="cell" id="life"><div class="label">Быт</div><span></span></div>
+    </div>
+  </div>
+  <script>
+    function calculateMatrix() {
+      const errorMessage = document.getElementById('error-message');
+      errorMessage.style.display = 'none';
+      const input = document.getElementById('birthdate').value;
+
+      const regex = /^\d{2}\.\d{2}\.\d{4}$/;
+      if (!regex.test(input)) {
+        errorMessage.style.display = 'block';
+        return;
+      }
+
+      const [day, month, year] = input.split('.').map(Number);
+      const daysInMonth = [31, (year % 4 === 0 && year % 100 !== 0 || year % 400 === 0) ? 29 : 28,
+        31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+      if (
+        isNaN(day) || isNaN(month) || isNaN(year) ||
+        month < 1 || month > 12 ||
+        day < 1 || day > daysInMonth[month - 1]
+      ) {
+        errorMessage.style.display = 'block';
+        return;
+      }
+
+      const digits = input.replace(/\D/g, '').split('').map(Number);
+      const firstSum = digits.reduce((a, b) => a + b, 0);
+      const secondSum = firstSum.toString().split('').reduce((a, b) => a + +b, 0);
+      let firstDigit = +input[0];
+      if (firstDigit === 0) firstDigit = +input[1];
+      const thirdNumber = firstSum - 2 * firstDigit;
+      const fourthSum = thirdNumber.toString().split('').reduce((a, b) => a + +b, 0);
+
+      const allNumbers = [...digits, firstSum, secondSum, thirdNumber, fourthSum]
+        .join('').split('').map(Number);
+
+      const sectors = { '1': [], '2': [], '3': [], '4': [], '5': [], '6': [], '7': [], '8': [], '9': [] };
+      allNumbers.forEach(n => { if (sectors[n]) sectors[n].push(n); });
+
+      document.querySelector('#extra-numbers span').innerText = `${firstSum}, ${secondSum}, ${thirdNumber}, ${fourthSum}`;
+      const fate = secondSum === 11 ? 11 : secondSum.toString().split('').reduce((a, b) => a + +b, 0);
+      document.querySelector('#fate span').innerText = fate;
+      document.querySelector('#character span').innerText = sectors['1'].join(' ') || '-';
+      document.querySelector('#energy span').innerText = sectors['2'].join(' ') || '-';
+      document.querySelector('#interest span').innerText = sectors['3'].join(' ') || '-';
+      document.querySelector('#health span').innerText = sectors['4'].join(' ') || '-';
+      document.querySelector('#logic span').innerText = sectors['5'].join(' ') || '-';
+      document.querySelector('#work span').innerText = sectors['6'].join(' ') || '-';
+      document.querySelector('#luck span').innerText = sectors['7'].join(' ') || '-';
+      document.querySelector('#duty span').innerText = sectors['8'].join(' ') || '-';
+      document.querySelector('#memory span').innerText = sectors['9'].join(' ') || '-';
+
+      const temperament = sectors['3'].length + sectors['5'].length + sectors['7'].length;
+      const life = sectors['4'].length + sectors['5'].length + sectors['6'].length;
+      const goal = sectors['1'].length + sectors['4'].length + sectors['7'].length;
+      const family = sectors['2'].length + sectors['5'].length + sectors['8'].length;
+      const habits = sectors['3'].length + sectors['6'].length + sectors['9'].length;
+
+      // Трансформация единиц в восьмерки
+      let transformedOnes = [];
+      let transformedEights = [];
+      if (sectors['1'].length >= 3) {
+        if (sectors['1'].length % 2 === 0) {
+          transformedOnes = sectors['1'].slice(0, 2);
+          const toTransform = sectors['1'].length - 2;
+          transformedEights = Array(toTransform / 2).fill(8);
+        } else {
+          transformedOnes = sectors['1'].slice(0, 1);
+          const toTransform = sectors['1'].length - 1;
+          transformedEights = Array(Math.floor(toTransform / 2)).fill(8);
+        }
+      } else {
+        transformedOnes = [...sectors['1']];
+      }
+
+      // Трансформация шестерок в семерки
+      let transformedSixes = [];
+      let transformedSevens = [...sectors['7']];
+      if (sectors['6'].length >= 1) {
+        transformedSixes = [];
+        transformedSevens = [...sectors['7'], ...sectors['6']];
+      }
+
+      const hiddenGoal = transformedOnes.length + sectors['4'].length + transformedSevens.length;
+
+      document.querySelector('#goal span').innerText = goal + (hiddenGoal ? ` (${hiddenGoal})` : '');
+      document.querySelector('#temperament span').innerText = temperament;
+      document.querySelector('#life span').innerText = life;
+      document.querySelector('#family span').innerText = family;
+      document.querySelector('#habits span').innerText = habits;
+      document.getElementById('matrix').style.display = 'grid';
+    }
+
+    document.getElementById('birthdate').addEventListener('input', function (e) {
+      let value = e.target.value.replace(/\D/g, '').slice(0, 8);
+      if (value.length > 4) {
+        value = value.slice(0, 2) + '.' + value.slice(2, 4) + '.' + value.slice(4);
+      } else if (value.length > 2) {
+        value = value.slice(0, 2) + '.' + value.slice(2);
+      }
+      e.target.value = value;
+    });
+  </script>
+</body>
+</html>
